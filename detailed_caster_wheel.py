@@ -174,11 +174,17 @@ def run(context):
         arm_plane = comp.constructionPlanes.add(plane_input)
         arm_sketch = sketches.add(arm_plane)
 
-        # Sketch a rectangle for the arm's side profile
-        arm_sketch.sketchCurves.sketchLines.addTwoPointRectangle(
-            adsk.core.Point2D.create(-fork_top_plate_diam / 2, arm_z_top),
-            adsk.core.Point2D.create(fork_top_plate_diam / 2, arm_z_bottom)
-        )
+        # Sketch a rectangle for the arm's side profile by drawing four distinct lines.
+        # This is more robust than addTwoPointRectangle on custom construction planes.
+        lines = arm_sketch.sketchCurves.sketchLines
+        p1 = adsk.core.Point2D.create(-fork_top_plate_diam / 2, arm_z_top)
+        p2 = adsk.core.Point2D.create(fork_top_plate_diam / 2, arm_z_top)
+        p3 = adsk.core.Point2D.create(fork_top_plate_diam / 2, arm_z_bottom)
+        p4 = adsk.core.Point2D.create(-fork_top_plate_diam / 2, arm_z_bottom)
+        lines.addByTwoPoints(p1, p2)
+        lines.addByTwoPoints(p2, p3)
+        lines.addByTwoPoints(p3, p4)
+        lines.addByTwoPoints(p4, p1)
         arm_prof = arm_sketch.profiles.item(0)
 
         # Extrude the arm and join it to the fork body.
