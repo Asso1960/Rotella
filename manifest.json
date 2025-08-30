@@ -1,16 +1,18 @@
 {
-  "autodeskProduct": "Fusion360",
-  "type": "addin",
-  "author": "ChatGPT",
-  "description": {
-    "en": "Creates a caster wheel (rotella da carrello) with given dimensions"
-  },
-  "supportedOS": [
-    "windows",
-    "mac"
-  ],
-  "engine": "Fusion360",
-  "version": "1.0.0",
-  "id": "rotella_da_carrello_addin_full",
-  "name": "Rotella da Carrello"
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "e8d6e7a7-c9b6-4e5a-a5d8-6f6f3e1c6a6e",
+    "author": "Asso1960",
+    "name": "Detailed Caster Wheel",
+    "description": {
+        "en": "Creates a detailed caster wheel based on user-provided dimensions.",
+        "it": "Crea una rotella da carrello dettagliata in base alle dimensioni fornite dall'utente."
+    },
+    "version": "1.0.0",
+    "supportedOS": "windows|mac",
+    "python.entryPoints": {
+        "run": "detailed_caster_wheel.run",
+        "stop": "detailed_caster_wheel.stop"
+    },
+    "API": "Python"
 }
