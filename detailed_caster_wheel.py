@@ -214,11 +214,10 @@ def run(context):
         # Extrude cut symmetrically to ensure it goes through both arms
         cut_input = extrudes.createInput(axle_hole_prof, adsk.fusion.FeatureOperations.CutFeatureOperation)
 
-        # Explicitly specify the fork_body as the target for the cut,
-        # which is necessary when the sketch is on a component plane and multiple bodies exist.
-        bodies_to_cut = adsk.core.ObjectCollection.create()
-        bodies_to_cut.add(fork_body)
-        cut_input.participantBodies = bodies_to_cut
+        # Explicitly specify the fork_body as the target for the cut.
+        # This is necessary when the sketch is on a component plane and multiple bodies exist.
+        # The API expects a standard Python list of bodies for this property.
+        cut_input.participantBodies = [fork_body]
 
         cut_distance = adsk.core.ValueInput.createByReal(arm_x_position + fork_arm_width)
         cut_input.setDistanceExtent(True, cut_distance)
