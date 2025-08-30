@@ -100,9 +100,15 @@ def run(context):
         for point in hole_points:
             circles.addByCenterRadius(point, hole_diam / 2)
 
-        # Extrude-cut the holes through the plate.
+        # Extrude-cut the holes through the plate in a single, robust operation.
+        profile_collection = adsk.core.ObjectCollection.create()
         for prof in holes_sketch.profiles:
-            extrudes.addSimple(prof, adsk.core.ValueInput.createByReal(-plate_thk * 2), adsk.fusion.FeatureOperations.CutFeatureOperation)
+            profile_collection.add(prof)
+
+        cut_input = extrudes.createInput(profile_collection, adsk.fusion.FeatureOperations.CutFeatureOperation)
+        distance = adsk.core.ValueInput.createByReal(-plate_thk * 2)
+        cut_input.setDistanceExtent(False, distance)
+        extrudes.add(cut_input)
 
         # --- Part 2: Wheel ---
         # Calculate the Z position for the center of the wheel.
