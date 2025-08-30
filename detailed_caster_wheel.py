@@ -76,18 +76,18 @@ def run(context):
                 fillets.add(fillet_input)
 
         # Create a new sketch on the top face of the plate for the mounting holes.
-        # Find the top face by checking the normal vector of each face.
-        top_face = None
+        # Find the top face right before using it to avoid stale references.
+        top_face_for_holes = None
         for face in plate_body.faces:
             _, normal = face.evaluator.getNormalAtPoint(face.pointOnFace)
             if normal.isParallelTo(adsk.core.Vector3D.create(0, 0, 1)):
-                top_face = face
+                top_face_for_holes = face
                 break
 
-        if not top_face:
-            raise RuntimeError("Could not find the top face of the plate to create holes.")
+        if not top_face_for_holes:
+            raise RuntimeError("Could not find the top face of the plate to create mounting holes.")
 
-        holes_sketch = sketches.add(top_face)
+        holes_sketch = sketches.add(top_face_for_holes)
 
         # Draw the four mounting holes.
         circles = holes_sketch.sketchCurves.sketchCircles
@@ -232,8 +232,20 @@ def run(context):
         extrude_input.setDistanceExtent(False, distance)
         extrudes.add(extrude_input)
 
-        # Finally, create a hole in the top plate for the swivel pin
-        hole_on_plate_sketch = sketches.add(top_face) # top_face is from Part 1
+        # Finally, create a hole in the top plate for the swivel pin.
+        # It's critical to re-find the top face here to get a fresh reference,
+        # as previous modeling operations may have invalidated old geometry references.
+        top_face_for_swivel_hole = None
+        for face in plate_body.faces:
+            _, normal = face.evaluator.getNormalAtPoint(face.pointOnFace)
+            if normal.isParallelTo(adsk.core.Vector3D.create(0, 0, 1)):
+                top_face_for_swivel_hole = face
+                break
+
+        if not top_face_for_swivel_hole:
+            raise RuntimeError("Could not re-find the top face of the plate for the swivel hole.")
+
+        hole_on_plate_sketch = sketches.add(top_face_for_swivel_hole)
         hole_on_plate_sketch.sketchCurves.sketchCircles.addByCenterRadius(adsk.core.Point3D.create(0,0,0), swivel_pin_diam/2 + 0.05) # with clearance
         hole_prof = hole_on_plate_sketch.profiles.item(0)
         extrudes.addSimple(hole_prof, adsk.core.ValueInput.createByReal(-plate_thk * 2), adsk.fusion.FeatureOperations.CutFeatureOperation)
