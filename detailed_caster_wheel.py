@@ -174,13 +174,20 @@ def run(context):
         arm_plane = comp.constructionPlanes.add(plane_input)
         arm_sketch = sketches.add(arm_plane)
 
-        # Sketch a rectangle for the arm's side profile by drawing four distinct lines.
-        # This is more robust than addTwoPointRectangle on custom construction planes.
+        # Sketch a rectangle for the arm's side profile by drawing four distinct lines
+        # using full 3D coordinates, which is required for sketches on custom planes.
         lines = arm_sketch.sketchCurves.sketchLines
-        p1 = adsk.core.Point2D.create(-fork_top_plate_diam / 2, arm_z_top)
-        p2 = adsk.core.Point2D.create(fork_top_plate_diam / 2, arm_z_top)
-        p3 = adsk.core.Point2D.create(fork_top_plate_diam / 2, arm_z_bottom)
-        p4 = adsk.core.Point2D.create(-fork_top_plate_diam / 2, arm_z_bottom)
+
+        # Define the 3D coordinates for the four corners of the rectangle.
+        # The sketch is on a plane offset by arm_x_position from the YZ plane.
+        y1 = -fork_top_plate_diam / 2
+        y2 = fork_top_plate_diam / 2
+
+        p1 = adsk.core.Point3D.create(arm_x_position, y1, arm_z_top)
+        p2 = adsk.core.Point3D.create(arm_x_position, y2, arm_z_top)
+        p3 = adsk.core.Point3D.create(arm_x_position, y2, arm_z_bottom)
+        p4 = adsk.core.Point3D.create(arm_x_position, y1, arm_z_bottom)
+
         lines.addByTwoPoints(p1, p2)
         lines.addByTwoPoints(p2, p3)
         lines.addByTwoPoints(p3, p4)
