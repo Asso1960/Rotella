@@ -49,22 +49,31 @@ def run(context):
         p2 = adsk.core.Point3D.create(plate_len_x / 2, plate_len_y / 2, 0)
         rect_lines = lines.addTwoPointRectangle(p1, p2)
 
-        # Add fillets to the corners of the rectangle.
-        if plate_corner_radius > 0:
-            if plate_corner_radius > min(plate_len_x, plate_len_y) / 2:
-                ui.messageBox("Warning: Corner radius is too large for the plate dimensions. Skipping fillets.")
-            else:
-                fillets_col = plate_sketch.sketchFillets
-                # The rectangle lines are connected, so we can fillet adjacent lines.
-                fillets_col.add(rect_lines.item(0), rect_lines.item(1), plate_corner_radius)
-                fillets_col.add(rect_lines.item(1), rect_lines.item(2), plate_corner_radius)
-                fillets_col.add(rect_lines.item(2), rect_lines.item(3), plate_corner_radius)
-                fillets_col.add(rect_lines.item(3), rect_lines.item(0), plate_corner_radius)
-
-        # Extrude the plate profile to create the body.
+        # Extrude the plate profile (with sharp corners) to create the body.
         plate_prof = plate_sketch.profiles.item(0)
         plate_body = extrudes.addSimple(plate_prof, adsk.core.ValueInput.createByReal(plate_thk), adsk.fusion.FeatureOperations.NewBodyFeatureOperation).bodies.item(0)
         plate_body.name = "Top Plate"
+
+        # Apply a 3D fillet to the vertical corner edges of the plate.
+        if plate_corner_radius > 0:
+            # Find the vertical corner edges.
+            vertical_edges = adsk.core.ObjectCollection.create()
+            for edge in plate_body.edges:
+                # Check if the edge is a straight line and is parallel to the Z-axis.
+                if edge.geometry.curveType == adsk.core.Curve3DTypes.Line3DCurveType:
+                    _, start, end = edge.geometry.getData()
+                    direction = start.vectorTo(end)
+                    if direction.isParallelTo(adsk.core.Vector3D.create(0, 0, 1)):
+                        vertical_edges.add(edge)
+
+            # Create a fillet feature input and add the edges.
+            if vertical_edges.count > 0:
+                fillet_input = fillets.createInput()
+                radius = adsk.core.ValueInput.createByReal(plate_corner_radius)
+                fillet_input.addConstantRadiusEdgeSet(vertical_edges, radius, True)
+
+                # Add the fillet feature to the component.
+                fillets.add(fillet_input)
 
         # Create a new sketch on the top face of the plate for the mounting holes.
         # Find the top face by checking the normal vector of each face.
